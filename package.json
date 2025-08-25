@@ -54,9 +54,10 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "simple-git-hooks",
-    "prepublishOnly": "nr build",
+    "prepublishOnly": "pnpm run build",
     "typecheck": "tsc --noEmit",
     "lint-staged": "lint-staged",
+    "tag": "bumpp",
     "release": "bumpp && npm publish"
   },
   "devDependencies": {
