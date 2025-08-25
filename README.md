@@ -17,8 +17,18 @@ Via [npm](https://www.npmjs.com/):
 ```bash
 # npm
 npm install jsesc-es
+```
+
+Via [pnpm](https://pnpm.io/):
+
+```bash
 # pnpm
 pnpm add jsesc-es
+```
+
+Via [yarn](https://yarnpkg.com/):
+
+```bash
 # yarn
 yarn add jsesc-es
 ```
