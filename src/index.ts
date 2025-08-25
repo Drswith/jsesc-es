@@ -1,3 +1,3 @@
-export function myFunction() {
-  return 'Hello, world!'
+export function myFunction(str: string) {
+  return str ?? 'Hello, world!'
 }

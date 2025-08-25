@@ -13,6 +13,17 @@
   "bugs": {
     "url": "https://github.com/Drswith/jsesc-es/issues"
   },
+  "keywords": [
+    "buffer",
+    "escape",
+    "javascript",
+    "json",
+    "map",
+    "set",
+    "string",
+    "stringify",
+    "tool"
+  ],
   "exports": {
     ".": "./dist/index.js",
     "./package.json": "./package.json"
@@ -23,11 +34,14 @@
   "files": [
     "dist"
   ],
+  "engines": {
+    "node": ">=6"
+  },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "tsdown --clean",
+    "build": "tsdown",
     "dev": "tsdown --watch",
     "test": "vitest run",
     "test:watch": "vitest",
