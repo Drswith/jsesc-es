@@ -12,28 +12,25 @@ jsesc’s output can be used instead of `JSON.stringify`’s to avoid [mojibake]
 
 ## Installation
 
-Via [npm](https://www.npmjs.com/):
+Via [pnpm](https://pnpm.io/) (recommended):
 
 ```bash
-# npm
-npm install jsesc-es
-```
-
-Via [pnpm](https://pnpm.io/):
-
-```bash
-# pnpm
 pnpm add jsesc-es
 ```
 
 Via [yarn](https://yarnpkg.com/):
 
 ```bash
-# yarn
 yarn add jsesc-es
 ```
 
-### In [Node.js](https://nodejs.org/):
+Via [npm](https://www.npmjs.com/):
+
+```bash
+npm install jsesc-es
+```
+
+In [Node.js](https://nodejs.org/):
 
 - Use the ES Module default export:
 

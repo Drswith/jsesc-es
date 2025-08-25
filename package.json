@@ -47,7 +47,7 @@
   },
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch",
+    "dev": "tsdown --watch --sourcemap",
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:watch": "vitest",
