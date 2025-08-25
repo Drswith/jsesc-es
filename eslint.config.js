@@ -8,10 +8,14 @@ export default antfu(
       '**/dist/**',
       '**/node_modules/**',
       '**/tests/**',
+      'DIFFERENCES.md',
+      'MIGRATION.md',
     ],
   },
   {
     rules: {
+      'no-control-regex': 'off',
+      'regexp/no-escape-backspace': 'off',
     },
   },
 )
