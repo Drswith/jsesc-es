@@ -22,5 +22,13 @@
   },
   "include": [
     "src/**/*"
+  ],
+  "exclude": [
+    "bin",
+    "node_modules",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "dist",
+    "original-jsesc"
   ]
 }

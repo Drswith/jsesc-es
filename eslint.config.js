@@ -6,6 +6,8 @@ export default antfu(
     formatters: true,
     ignores: [
       '**/dist/**',
+      '**/bin/**',
+      '**/original-jsesc/**',
       '**/node_modules/**',
       '**/tests/**',
       'DIFFERENCES.md',
