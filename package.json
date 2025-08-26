@@ -1,7 +1,7 @@
 {
   "name": "jsesc-es",
   "type": "module",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "packageManager": "pnpm@9.15.9",
   "description": "Given some data, jsesc returns the shortest possible stringified & ASCII-safe representation of that data.",
   "author": "Drswith",
