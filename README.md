@@ -48,21 +48,14 @@ jsesc-es's output can be used instead of `JSON.stringify`'s to avoid [mojibake](
 
 ## Installation
 
-Via [pnpm](https://pnpm.io/) (recommended):
-
 ```bash
+# pnpm (recommended) - https://pnpm.io/ 
 pnpm add jsesc-es
-```
 
-Via [yarn](https://yarnpkg.com/):
-
-```bash
+# yarn - https://yarnpkg.com/
 yarn add jsesc-es
-```
 
-Via [npm](https://www.npmjs.com/):
-
-```bash
+# npm - https://www.npmjs.com/
 npm install jsesc-es
 ```
 
@@ -83,7 +76,7 @@ import jsesc, { type JsescOptions } from 'jsesc-es'
 // Import version info
 import { version } from 'jsesc-es'
 
-// Mixed import
+// Mixed import (not recommended)
 import jsesc, { version, type JsescOptions } from 'jsesc-es'
 ```
 
@@ -514,14 +507,32 @@ jsesc-es includes several performance improvements over the original:
 
 ## Browser Support
 
-jsesc-es supports all modern browsers and Node.js environments:
+jsesc-es provides broad compatibility through its dual build system:
 
-- **Node.js**: 16+ (ES2020+ features)
-- **Browsers**: Chrome 80+, Firefox 72+, Safari 13.1+, Edge 80+
-- **TypeScript**: 4.5+
+### Runtime Requirements
+
+**For ES Modules (recommended):**
+- **Node.js**: 14+ (native ESM support)
+- **Browsers**: Chrome 61+, Firefox 60+, Safari 10.1+, Edge 16+
 - **ES Modules**: Native support required
 
-For legacy browser support, use a transpiler like Babel or TypeScript.
+**For CommonJS (legacy):**
+- **Node.js**: 6+ (transpiled output)
+- **Browsers**: Chrome 27+, Firefox 3+, Safari 4+, Opera 10+ (with bundler)
+
+### Build Targets vs. Module System
+
+While jsesc-es maintains compatibility with legacy environments through its transpiled CommonJS build (targeting node6, chrome27, etc.), **ES Modules require modern environments** that support the `import`/`export` syntax natively. The build targets ensure the *JavaScript syntax and APIs* work in older environments, but the *module system itself* has minimum version requirements.
+
+**Key Points:**
+- 📦 **CommonJS build**: Works in very old environments (Node 6+, Chrome 27+)
+- 🚀 **ESM build**: Requires modern environments with native ESM support
+- 🔧 **Legacy projects**: Use CommonJS or transpile ESM with Babel/TypeScript
+- ⚡ **Modern projects**: Use ESM for better tree-shaking and performance
+
+### TypeScript Support
+- **TypeScript**: 4.5+
+- **Built-in types**: No `@types/` package needed
 
 ## Development
 
@@ -540,7 +551,7 @@ pnpm test
 pnpm build
 
 # Type checking
-pnpm type-check
+pnpm typecheck
 
 # Linting
 pnpm lint

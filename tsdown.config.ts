@@ -6,7 +6,7 @@ export default defineConfig(async () => {
   const pkg = JSON.parse(await fsp.readFile('./package.json', 'utf-8'))
 
   const config: UserConfig = {
-    entry: ['./src/index.ts'],
+    entry: './src/index.ts',
     platform: 'neutral',
     target: ['node6', 'chrome27', 'firefox3', 'safari4', 'opera10'],
     env: {

@@ -1,5 +1,6 @@
 'use strict'
 import type { JsescOptions } from './types'
+import { version } from './version'
 
 const object = {}
 const hasOwnProperty = object.hasOwnProperty
@@ -355,10 +356,6 @@ function jsesc(argument: unknown, options: JsescOptions = {}): string {
   }
   return result as string
 }
-
-// For compatibility, also export version (will be replaced during build)
-// eslint-disable-next-line node/prefer-global/process
-export const version = process.env.__VERSION__
 
 jsesc.version = version
 
