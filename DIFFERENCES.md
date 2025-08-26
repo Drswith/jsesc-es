@@ -1,39 +1,54 @@
-# jsesc-es 与原始 jsesc 库的差异文档
+# Differences Between jsesc-es and Original jsesc Library
 
-本文档详细记录了 `jsesc-es` TypeScript + ESM 版本与原始 `jsesc` 库在源码和测试方面无法保持完全一致的地方。
+This document details all differences between the `jsesc-es` TypeScript + ESM version and the original `jsesc` library in terms of source code and testing.
 
-## 源码差异 (src/index.ts vs jsesc.js)
+## Library Comparison
 
-### 1. 模块系统差异
+**Original Library (jsesc)**:
+- Module System: CommonJS
+- Language: JavaScript
+- Main File: jsesc.js
+
+**New Version (jsesc-es)**:
+- Module System: ES Modules
+- Language: TypeScript
+- Main File: src/index.ts
+
+## Source Code Differences
+
+### 1. Module System Differences
 
 **原始库 (jsesc.js)**:
-
 ```javascript
 module.exports = jsesc
 ```
 
-**新版本 (src/index.ts)**:
-
+**新版本 (src/index.ts + src/jsesc-es.ts)**:
 ```typescript
-export default jsesc
-export { jsesc, type JsescOptions }
-export const version = '3.0.2'
+// src/index.ts
+export { jsesc as default } from './jsesc-es'
+export * from './jsesc-es'
+export * from './types'
+
+// src/jsesc-es.ts
+export { jsesc }
+export const version = process.env.__VERSION__
 ```
 
-**影响**:
+**Impact**:
+- Original library uses CommonJS module system
+- New version uses ES Modules, providing both default and named exports
+- New version supports multiple import methods: `import jsesc from 'jsesc-es'` or `import { jsesc } from 'jsesc-es'`
 
-- 原始库使用 CommonJS 模块系统
-- 新版本使用 ES Modules，提供了默认导出和命名导出
-- 新版本额外导出了 TypeScript 类型定义
+### 2. TypeScript Type System
 
-### 2. TypeScript 类型系统
+**Original Library**: Pure JavaScript, no type definitions
 
-**原始库**: 纯 JavaScript，无类型定义
-
-**新版本**: 完整的 TypeScript 类型支持
+**New Version**: Complete TypeScript type support
 
 ```typescript
-interface JsescOptions {
+// src/types.ts
+export interface JsescOptions {
   escapeEverything?: boolean
   minimal?: boolean
   isScriptContext?: boolean
@@ -48,70 +63,39 @@ interface JsescOptions {
   indentLevel?: number
   __inline1__?: boolean
   __inline2__?: boolean
+  [key: string]: unknown
 }
 ```
 
-**影响**:
+**Impact**:
+- New version provides complete type safety
+- Parameter type checking and IDE intelligent hints
+- Compile-time error detection
+- Exports `JsescOptions` interface for external use
 
-- 新版本提供了完整的类型安全
-- 参数类型检查和 IDE 智能提示
-- 编译时错误检测
-
-### 3. 函数签名差异
+### 3. Function Signature Differences
 
 **原始库**:
-
 ```javascript
 const jsesc = (argument, options) => {
 ```
 
 **新版本**:
-
 ```typescript
-const jsesc = (argument: any, options?: JsescOptions): string => {
+function jsesc(argument: unknown, options: JsescOptions = {}): string {
 ```
 
-**影响**:
+**Impact**:
+- New version clarifies parameter and return value types
+- Provides better type inference
+- More explicit default parameter value handling
 
-- 新版本明确了参数和返回值类型
-- 提供了更好的类型推断
+### 4. Utility Function Implementation Differences
 
-### 4. 函数处理逻辑差异
-
-**原始库 (jsesc.js)**:
+**Original Library**: Uses custom utility functions
 
 ```javascript
-// 在主逻辑中，函数被当作普通对象处理
-if (isFunction(argument)) {
-  return String(argument);
-}
-```
-
-**新版本 (src/index.ts)**:
-
-```typescript
-if (isFunction(argument)) {
-  // 确保函数始终单行输出并使用正确的引号
-  let funcStr = String(argument).replace(/\s+/g, ' ')
-  // 将函数体中的双引号转换为单引号以匹配预期格式
-  funcStr = funcStr.replace(/"/g, '\'')
-  return funcStr
-}
-```
-
-**影响**:
-
-- 原始库的 `String(argument)` 可能产生多行函数输出
-- 新版本添加了格式化处理确保单行输出
-- 修复了函数字符串中引号格式的一致性问题
-- 这是一个 Bug 修复，不是功能变更
-
-### 5. 工具函数实现差异
-
-**原始库**: 使用自定义工具函数
-
-```javascript
-function forOwn(object, callback) {
+const forOwn = (object, callback) => {
   for (const key in object) {
     if (hasOwnProperty.call(object, key)) {
       callback(key, object[key])
@@ -119,7 +103,7 @@ function forOwn(object, callback) {
   }
 }
 
-function extend(destination, source) {
+const extend = (destination, source) => {
   if (!source) {
     return destination
   }
@@ -130,59 +114,166 @@ function extend(destination, source) {
 }
 ```
 
-**新版本**: 使用现代 JavaScript 特性
+**New Version**: Uses TypeScript generics and type-safe implementation
 
 ```typescript
-// 使用 Object.assign 替代自定义 extend
-const defaults: JsescOptions = { /* ... */ }
-options = Object.assign({}, defaults, options)
+function forOwn<T extends Record<string, unknown>>(
+  object: T, 
+  callback: (key: string, value: T[keyof T]) => void
+) {
+  for (const key in object) {
+    if (hasOwnProperty.call(object, key)) {
+      callback(key, object[key])
+    }
+  }
+}
 
-// 使用 Object.entries 替代 forOwn
-for (const [key, value] of Object.entries(argument)) {
-  // ...
+function extend<T extends Record<string, unknown>, S extends Record<string, unknown>>(
+  destination: T, 
+  source?: S
+): T & S {
+  if (!source) {
+    return destination as T & S
+  }
+  forOwn(source, (key, value) => {
+    (destination as Record<string, unknown>)[key] = value
+  })
+  return destination as T & S
 }
 ```
 
-**影响**:
+**Impact**:
+- New version uses TypeScript generics for type safety
+- Better type inference and compile-time checking
+- Functionally equivalent but type-safer
 
-- 代码更简洁，使用标准 API
-- 性能可能略有提升
-- 功能完全等价
-
-### 6. 严格模式声明
-
-**原始库和新版本**: 都包含 `'use strict';`
-
-**影响**: 无差异，保持一致
-
-### 7. 版本信息处理
+### 5. Type Checking Function Differences
 
 **原始库**:
+```javascript
+const isObject = (value) => {
+  return toString.call(value) == '[object Object]'
+}
+const isString = (value) => {
+  return typeof value == 'string' ||
+    toString.call(value) == '[object String]'
+}
+```
 
+**新版本**:
+```typescript
+function isObject(value: unknown): value is Record<string, unknown> {
+  return toString.call(value) === '[object Object]'
+}
+function isString(value: unknown): value is string {
+  return typeof value === 'string'
+    || toString.call(value) === '[object String]'
+}
+```
+
+**Impact**:
+- New version uses TypeScript type guards
+- Uses strict equality (`===`) instead of loose equality (`==`)
+- Provides better type inference
+
+### 6. Function Handling Logic Differences
+
+**Original Library**: Functions are treated as regular objects
+```javascript
+if (!isObject(argument)) {
+  if (json) {
+    return JSON.stringify(argument) || 'null'
+  }
+  return String(argument)
+}
+```
+
+**New Version**: Specialized function type handling
+```typescript
+if (!isObject(argument)) {
+  if (json) {
+    return JSON.stringify(argument) || 'null'
+  }
+  if (isFunction(argument)) {
+    // 确保函数始终单行输出并使用正确的引号
+    let funcStr = String(argument).replace(/\s+/g, ' ')
+    // 将函数体中的双引号转换为单引号以匹配预期格式
+    funcStr = funcStr.replace(/"/g, '\'')
+    return funcStr
+  }
+  return String(argument)
+}
+```
+
+**Impact**:
+- New version adds specialized function handling logic
+- Ensures function strings are formatted as single lines
+- Unifies internal quote formatting for functions
+- This is a functional enhancement that improves output consistency
+
+### 7. Regular Expression Differences
+
+**原始库**:
+```javascript
+const regexDigit = /[0-9]/
+```
+
+**新版本**:
+```typescript
+const regexDigit = /\d/
+```
+
+**Impact**:
+- New version uses more concise regular expression syntax
+- Functionally equivalent
+
+### 8. Version Information Handling Differences
+
+**原始库**:
 ```javascript
 jsesc.version = '3.0.2'
 ```
 
 **新版本**:
-
 ```typescript
-export const version = '3.0.2'
+export const version = process.env.__VERSION__
+jsesc.version = version
 ```
 
-**影响**:
+**Impact**:
+- Original library hard-codes version number
+- New version reads version from environment variables, supporting dynamic injection at build time
+- New version provides both function property and independent export access methods
 
-- 原始库将版本作为函数属性
-- 新版本作为独立的导出常量
-- 功能上等价，但访问方式略有不同
+### 9. Buffer Check Differences
 
-## 测试差异 (tests/index.test.ts vs tests/tests.js)
+**原始库**:
+```javascript
+const isBuffer = (value) => {
+  return typeof Buffer === 'function' && Buffer.isBuffer(value)
+}
+```
 
-### 1. 测试框架差异
+**新版本**:
+```typescript
+function isBuffer(value: unknown): value is globalThis.Buffer {
+  return globalThis.Buffer && globalThis.Buffer.isBuffer && globalThis.Buffer.isBuffer(value)
+}
+```
+
+**Impact**:
+- New version uses `globalThis.Buffer` instead of direct `Buffer` access
+- Better cross-environment compatibility
+- Added type guards
+
+## Testing Differences
+
+### 1. Testing Framework Differences
 
 **原始测试 (tests/tests.js)**:
-
 ```javascript
-const assert = require('assert');
+const assert = require('assert')
+const jsesc = require('../jsesc.js')
 
 describe('common usage', function() {
   it('works correctly for common operations', function() {
@@ -190,72 +281,48 @@ describe('common usage', function() {
       typeof jsesc.version,
       'string',
       '`jsesc.version` must be a string'
-    );
+    )
 ```
 
-**新版本测试 (tests/index.test.ts)**:
-
+**新版本测试 (tests/common.test.ts)**:
 ```typescript
-import { describe, it, expect } from 'vitest';
-import jsesc, { version } from '../src';
+import { assert, test } from 'vitest'
+import jsesc from '../src'
 
-describe('common usage', () => {
-  it('works correctly for common operations', () => {
-    expect(
-      typeof version
-    ).toBe('string');
+test('common usage', () => {
+  assert.equal(
+    jsesc('\0\x31'),
+    '\\x001',
+    '`\\0` followed by `1`'
+  )
 ```
 
-**影响**:
+**Impact**:
+- Original tests use Mocha + Node.js built-in `assert` module
+- New version uses Vitest testing framework
+- Syntax changed from `describe/it` to `test`
+- Changed from `function()` to arrow functions
+- Import method changed from CommonJS to ES Modules
 
-- 原始测试使用 Node.js 内置的 `assert` 模块
-- 新版本使用 Vitest 测试框架
-- 语法从 `assert.equal()` 改为 `expect().toBe()`
-- 从 `function()` 改为箭头函数
+### 2. Type Assertion Differences
 
-### 2. 导入方式差异
+**Original Tests**: No type assertions
 
-**原始测试**:
-
-```javascript
-const assert = require('node:assert')
-const jsesc = require('../jsesc.js')
-```
-
-**新版本测试**:
-
-```typescript
-import { describe, expect, it } from 'vitest'
-import jsesc, { version } from '../src'
-```
-
-**影响**:
-
-- 原始测试使用 CommonJS require
-- 新版本使用 ES Modules import
-- 版本信息访问方式不同：`jsesc.version` vs `version`
-
-### 3. 类型断言差异
-
-**原始测试**: 无类型断言
-
-**新版本测试**:
-
+**New Version Tests**:
 ```typescript
 jsesc('foo"bar\'baz', {
-  quotes: 'LOLWAT' as any // invalid setting
+  // @ts-ignore
+  'quotes': 'LOLWAT' // invalid setting
 })
 ```
 
-**影响**:
+**Impact**:
+- New version needs to use `@ts-ignore` to bypass TypeScript type checking
+- Used for testing invalid parameter handling
 
-- 新版本需要使用 `as any` 来绕过 TypeScript 类型检查
-- 用于测试无效参数的处理
-
-### 4. 测试文件结构差异
+### 3. Test File Structure Differences
 
 **原始测试结构**:
-
 ```
 tests/
 ├── index.html          # QUnit 浏览器测试页面
@@ -263,98 +330,122 @@ tests/
 ```
 
 **新版本测试结构**:
-
 ```
 tests/
-└── index.test.ts      # Vitest TypeScript 测试文件
+├── common.test.ts     # 主要测试用例
+├── advanced.test.ts   # 高级测试用例
+└── index.html         # 浏览器测试页面（保留）
 ```
 
-**原始浏览器测试 (index.html)**:
+**Impact**:
+- New version splits tests into multiple files
+- Retains browser test page but primarily uses Node.js environment testing
+- Test case count and content remain consistent
 
-```html
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>jsesc test suite</title>
-    <link rel="stylesheet" href="../node_modules/qunitjs/qunit/qunit.css" />
-  </head>
-  <body>
-    <div id="qunit"></div>
-    <script src="../node_modules/qunitjs/qunit/qunit.js"></script>
-    <script src="../jsesc.js"></script>
-    <script src="tests.js"></script>
-  </body>
-</html>
+## Build and Configuration Differences
 
-```
+### 1. Build System
 
-**影响**:
+**Original Library**: 
+- Uses Grunt build system
+- No TypeScript compilation step
+- Direct JavaScript file usage
 
-- 原始版本支持 QUnit 浏览器测试环境
-- 原始版本支持 RequireJS 模块加载测试
-- 新版本仅支持 Node.js 环境的 Vitest 测试
-- 移除了浏览器兼容性测试能力
-- 简化了测试环境配置
-
-### 5. 测试用例数量和内容
-
-**一致性**:
-
-- 所有 685 个测试用例都被完整迁移
-- 测试逻辑和预期结果完全一致
-- 仅测试语法发生变化
-
-**影响**: 功能测试覆盖率保持 100% 一致
-
-## 构建和配置差异
-
-### 1. 构建系统
-
-**原始库**: 无构建步骤，直接使用 JavaScript 文件
-
-**新版本**: 使用 `tsdown` 构建系统
+**New Version**: 
+- Uses `tsdown` build system
+- TypeScript compilation
+- Generates multiple format outputs (ESM, CJS, type definitions)
 
 ```json
 {
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch"
+    "dev": "tsdown --watch --sourcemap"
   }
 }
 ```
 
-### 2. 配置文件
+### 2. Package Configuration Differences
 
-**新版本新增**:
+**原始库 package.json**:
+```json
+{
+  "name": "jsesc",
+  "version": "3.1.0",
+  "main": "jsesc.js",
+  "files": ["LICENSE-MIT.txt", "jsesc.js", "bin/", "man/"]
+}
+```
 
-- `tsconfig.json` - TypeScript 配置
-- `tsdown.config.ts` - 构建配置
-- `vitest.config.ts` - 测试配置
-- `eslint.config.js` - 代码规范配置
+**新版本 package.json**:
+```json
+{
+  "name": "jsesc-es",
+  "type": "module",
+  "version": "0.0.3",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"]
+}
+```
 
-### 3. 包管理
+**Impact**:
+- New version explicitly declares as ESM package (`"type": "module"`)
+- Uses modern `exports` field to support conditional exports
+- Supports both ESM and CJS imports
+- Includes TypeScript type definitions
 
-**原始库**: 可能使用 npm
+### 3. Development Tool Configuration
 
-**新版本**: 使用 pnpm，包含锁定文件 `pnpm-lock.yaml`
+**New Configuration Files in New Version**:
+- `tsconfig.json` - TypeScript configuration
+- `tsdown.config.ts` - Build configuration
+- `vitest.config.ts` - Test configuration
+- `eslint.config.js` - Code style configuration
 
-## 兼容性保证
+### 4. Package Management Differences
 
-尽管存在上述差异，新版本在以下方面保持了完全兼容：
+**Original Library**: Uses npm
 
-1. **API 兼容性**: 所有公共 API 保持不变
-2. **功能兼容性**: 所有功能行为完全一致
-3. **输出兼容性**: 相同输入产生相同输出
-4. **选项兼容性**: 所有配置选项保持一致
+**New Version**: Uses pnpm
+- Includes `pnpm-lock.yaml` lock file
+- Configured `packageManager` field
 
-## 总结
+## Compatibility Guarantees
 
-主要差异集中在：
+Despite the above differences, the new version maintains full compatibility in the following aspects:
 
-1. **技术栈现代化**: CommonJS → ES Modules, JavaScript → TypeScript
-2. **开发工具升级**: assert → Vitest, 无构建 → tsdown
-3. **类型安全增强**: 添加完整的 TypeScript 类型定义
-4. **Bug 修复**: 函数格式化问题的修复
+1. **API Compatibility**: All public APIs remain unchanged
+2. **Functional Compatibility**: All functional behaviors are completely consistent
+3. **Output Compatibility**: Same inputs produce same outputs (except for function formatting improvements)
+4. **Option Compatibility**: All configuration options remain consistent
 
-这些差异都是为了提供更好的开发体验和类型安全，同时保持与原始库的完全功能兼容性。
+## Functional Enhancements
+
+The new version provides the following enhancements while maintaining compatibility:
+
+1. **Type Safety**: Complete TypeScript type definitions
+2. **Function Handling**: Improved function string formatting
+3. **Module Support**: Supports both ESM and CJS
+4. **Development Experience**: Better IDE support and type hints
+5. **Build Optimization**: Modern build toolchain
+
+## Summary
+
+Main differences are concentrated in:
+
+1. **Technology Stack Modernization**: CommonJS → ES Modules, JavaScript → TypeScript
+2. **Development Tool Upgrades**: Mocha → Vitest, Grunt → tsdown
+3. **Type Safety Enhancement**: Added complete TypeScript type definitions
+4. **Functional Improvements**: Function formatting and cross-environment compatibility improvements
+5. **Build System**: Support for multi-format output and modern toolchain
+
+These differences are all aimed at providing better development experience and type safety while maintaining complete functional compatibility with the original library.

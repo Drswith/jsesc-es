@@ -12,6 +12,7 @@ export default antfu(
       '**/tests/**',
       'DIFFERENCES.md',
       'MIGRATION.md',
+      'README.md',
     ],
   },
   {
